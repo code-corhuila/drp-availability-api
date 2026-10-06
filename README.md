@@ -1,25 +1,11 @@
 # drp-availability-api
 
-> availability bounded context: service API
+Availability read-model API (Go). **Hexagonal:** `internal/domain` has no web/DB imports. DDL in [`drp-availability-db`](https://github.com/code-corhuila/drp-availability-db).
 
-Part of the **SpaceHub (Distributed Reservation Platform)** distributed system — team `distributed-reservation-platform`, Grupo 1.
-Governance and documentation live in [`drp-docs`](https://github.com/code-corhuila/drp-docs).
+This increment is **Occupancy** (`BLOCK | CONFIRMED`). Catalog SoT is space; CONFIRMED overlap SoT is reservation. HTTP search comes later.
 
-## Branching
-
-Three permanent branches. **None of them accepts a direct commit** — you enter through a child
-branch and leave through a Pull Request.
-
-```
-develop  <--PR--  feat/... fix/... chore/...
-qa       <--PR--  qa/...
-main     <--PR--  release/...  hotfix/...
+```bash
+go test ./...
 ```
 
-Promotion happens **by re-application** (`git cherry-pick -x`), never by merging one permanent
-branch into another: `merge develop -> qa` and `merge qa -> main` do not exist in this model.
-
-`main` requires **1 approval from `ariel5253`**. On `develop` and `qa` the team sets its own review
-rule.
-
-Full policy: `00-governance/branching-policy.md` in `drp-docs`.
+Child of `develop` named `feat/…`. Promote with `cherry-pick -x`.
