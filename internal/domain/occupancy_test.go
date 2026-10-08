@@ -24,6 +24,16 @@ func TestOccupancyOverlap(t *testing.T) {
 	if Occupied([]Occupancy{row}, "space-2", hit) {
 		t.Fatal("other space")
 	}
+	block, err := NewOccupancy("o2", "space-1", "BLOCK", "b1", start, end, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if OccupiedBy([]Occupancy{row, block}, "space-1", hit, SourceBlock) != true {
+		t.Fatal("expected block")
+	}
+	if OccupiedBy([]Occupancy{block}, "space-1", hit, SourceConfirmed) {
+		t.Fatal("block is not confirmed")
+	}
 }
 
 func TestOccupancyRejects(t *testing.T) {
