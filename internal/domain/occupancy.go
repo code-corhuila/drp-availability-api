@@ -70,8 +70,15 @@ func NewOccupancy(id, spaceID, sourceKind, sourceID string, start, end, now time
 func (o Occupancy) Active() bool { return o.DeletedAt == nil }
 
 func Occupied(rows []Occupancy, spaceID string, period DateTimeRange) bool {
+	return OccupiedBy(rows, spaceID, period, "")
+}
+
+func OccupiedBy(rows []Occupancy, spaceID string, period DateTimeRange, kind SourceKind) bool {
 	for _, r := range rows {
-		if r.Active() && r.SpaceID == spaceID && r.Period.Overlaps(period) {
+		if !r.Active() || r.SpaceID != spaceID || !r.Period.Overlaps(period) {
+			continue
+		}
+		if kind == "" || r.SourceKind == kind {
 			return true
 		}
 	}
