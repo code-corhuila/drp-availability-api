@@ -6,8 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/code-corhuila/drp-availability-api/internal/adapters/catalog"
 	httpadapter "github.com/code-corhuila/drp-availability-api/internal/adapters/http"
 	"github.com/code-corhuila/drp-availability-api/internal/adapters/memory"
+	"github.com/code-corhuila/drp-availability-api/internal/adapters/occupancy"
 	"github.com/code-corhuila/drp-availability-api/internal/adapters/security"
 	"github.com/code-corhuila/drp-availability-api/internal/app"
 )
@@ -26,9 +28,29 @@ func main() {
 		jwksURL = "http://identity-api:8081/api/v1/auth/jwks"
 	}
 
-	cat, occ, err := memory.Corte2()
-	if err != nil {
-		log.Fatal(err)
+	var spaces app.SpaceCatalog
+	var occ app.OccupancyRepository
+	store := "memory Corte2"
+	if spaceURL := os.Getenv("SPACE_API_URL"); spaceURL != "" {
+		spaces = catalog.HTTP{BaseURL: spaceURL}
+		store = "catalog HTTP " + spaceURL
+	} else {
+		memSpaces, memOcc, err := memory.Corte2()
+		if err != nil {
+			log.Fatal(err)
+		}
+		spaces = memSpaces
+		occ = memOcc
+	}
+	if reservationURL := os.Getenv("RESERVATION_API_URL"); reservationURL != "" {
+		occ = occupancy.HTTP{BaseURL: reservationURL}
+		store += "; occupancy HTTP " + reservationURL
+	} else if occ == nil {
+		_, memOcc, err := memory.Corte2()
+		if err != nil {
+			log.Fatal(err)
+		}
+		occ = memOcc
 	}
 	tokens := security.NewVerifier(security.HTTPJWKS{
 		URL: jwksURL,
@@ -39,11 +61,11 @@ func main() {
 
 	mux := httpadapter.NewMux(httpadapter.Deps{
 		Service: service,
-		Search:  app.Search{Spaces: cat, Occupancy: occ},
+		Search:  app.Search{Spaces: spaces, Occupancy: occ},
 		Tokens:  tokens,
 	})
 
-	log.Printf("drp-availability-api listening on %s (in-memory occupancy; DP-05 still; JWKS %s)", addr, jwksURL)
+	log.Printf("drp-availability-api listening on %s (%s; JWKS %s)", addr, store, jwksURL)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatal(err)
 	}
