@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/code-corhuila/drp-availability-api/internal/adapters/catalog"
 	"github.com/code-corhuila/drp-availability-api/internal/app"
 )
 
@@ -38,6 +39,7 @@ func RequireBearer(tokens app.TokenVerifier) func(http.Handler) http.Handler {
 				return
 			}
 			ctx := context.WithValue(r.Context(), subjectKey, sub)
+			ctx = catalog.WithBearer(ctx, header)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
